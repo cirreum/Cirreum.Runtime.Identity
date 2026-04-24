@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<RootNamespace>Cirreum.Runtime</RootNamespace>
+		<Description>Runtime Extensions umbrella package for the Cirreum Identity provider family. Composes Cirreum.Runtime.Identity.Oidc and Cirreum.Runtime.Identity.EntraExternalId, and exposes app-facing AddIdentity() / MapIdentity() extensions that register all providers and map all provisioning routes.</Description>
+		<PackageTags>cirreum;runtime;identity;oidc;entraexternalid;providers;umbrella</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cirreum.Runtime.Identity.Oidc" Version="1.0.0" />
+		<PackageReference Include="Cirreum.Runtime.Identity.EntraExternalId" Version="1.0.0" />
+	</ItemGroup>
+
+</Project>
