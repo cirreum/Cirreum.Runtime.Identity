@@ -3,7 +3,7 @@
 [![NuGet Version](https://img.shields.io/nuget/v/Cirreum.Runtime.Identity.svg?style=flat-square&labelColor=1F1F1F&color=003D8F)](https://www.nuget.org/packages/Cirreum.Runtime.Identity/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Cirreum.Runtime.Identity.svg?style=flat-square&labelColor=1F1F1F&color=003D8F)](https://www.nuget.org/packages/Cirreum.Runtime.Identity/)
 [![GitHub Release](https://img.shields.io/github/v/release/cirreum/Cirreum.Runtime.Identity?style=flat-square&labelColor=1F1F1F&color=FF3B2E)](https://github.com/cirreum/Cirreum.Runtime.Identity/releases)
-[![License](https://img.shields.io/github/license/cirreum/Cirreum.Runtime.Identity?style=flat-square&labelColor=1F1F1F&color=F2F2F2)](https://github.com/cirreum/Cirreum.Runtime.Identity/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-F2F2F2?style=flat-square&labelColor=1F1F1F)](https://github.com/cirreum/Cirreum.Runtime.Identity/blob/main/LICENSE)
 [![.NET](https://img.shields.io/badge/.NET-10.0-003D8F?style=flat-square&labelColor=1F1F1F)](https://dotnet.microsoft.com/)
 
 **Umbrella Runtime Extensions package for the Cirreum Identity provider family. Install this one package to wire up every supported identity provider (OIDC webhook + Entra External ID) behind a single `AddIdentity()` / `MapIdentity()` pair.**
