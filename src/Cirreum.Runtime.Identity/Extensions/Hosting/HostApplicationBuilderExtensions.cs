@@ -1,14 +1,18 @@
 namespace Microsoft.Extensions.Hosting;
 
 using Cirreum.Identity;
+using Cirreum.Identity.Configuration;
 using Cirreum.Identity.Provisioning;
+using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
-/// App-facing umbrella extensions for the Cirreum Identity provider family — composes
-/// <see cref="Cirreum.Identity.Oidc"/> and <see cref="Cirreum.Identity.EntraExternalId"/>
-/// Runtime Extensions packages behind a single <c>AddIdentity()</c> entry point.
+/// App-facing umbrella extensions for the Cirreum Identity provider family — registers
+/// every shipped provider protocol (Oidc and EntraExternalId) behind a single
+/// <c>AddIdentity()</c> entry point.
 /// </summary>
 public static class HostApplicationBuilderExtensions {
+
+	private sealed class AddIdentityMarker { }
 
 	/// <summary>
 	/// Registers every Cirreum Identity provider shipped in the umbrella (Oidc and
@@ -36,11 +40,21 @@ public static class HostApplicationBuilderExtensions {
 		this IHostApplicationBuilder builder,
 		Action<IIdentityBuilder>? configure = null) {
 
-		// Register both providers without passing the configure callback — we invoke it
-		// exactly once below against a single IdentityBuilder so AddProvisioner calls run
-		// once per key (not per provider × key).
-		builder.AddOidcIdentity();
-		builder.AddEntraExternalIdIdentity();
+		// Marker dedup — provider registration runs once regardless of repeat calls.
+		// The configure callback always runs so repeated calls can still add provisioners.
+		if (!builder.Services.IsMarkerTypeRegistered<AddIdentityMarker>()) {
+			builder.Services.MarkTypeAsRegistered<AddIdentityMarker>();
+
+			builder.RegisterIdentityProvider<
+				OidcIdentityProviderRegistrar,
+				OidcIdentityProviderSettings,
+				OidcIdentityProviderInstanceSettings>();
+
+			builder.RegisterIdentityProvider<
+				EntraExternalIdIdentityProviderRegistrar,
+				EntraExternalIdIdentityProviderSettings,
+				EntraExternalIdIdentityProviderInstanceSettings>();
+		}
 
 		configure?.Invoke(new IdentityBuilder(builder));
 		return builder;

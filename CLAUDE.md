@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **Cirreum.Runtime.Identity** — the umbrella Runtime Extensions package for the Cirreum Identity provider family. It composes the per-protocol packages (`Cirreum.Runtime.Identity.Oidc` and `Cirreum.Runtime.Identity.EntraExternalId`) behind a single `AddIdentity()` / `MapIdentity()` pair. Install this one package when the application needs multiple identity-provider protocols; prefer a per-protocol package when a single protocol is used.
+This is **Cirreum.Runtime.Identity** — the umbrella Runtime Extensions package for the Cirreum Identity provider family. It registers every shipped provider protocol (`Oidc` and `EntraExternalId`) behind a single `AddIdentity()` / `MapIdentity()` pair, composing directly against the identity runtime (`Cirreum.Runtime.IdentityProvider`) and the protocol packages (`Cirreum.Identity.Oidc`, `Cirreum.Identity.EntraExternalId`). Install this one package when the application needs multiple identity-provider protocols; prefer a per-protocol package when a single protocol is used.
+
+**No same-layer dependencies.** The umbrella deliberately does NOT reference its per-protocol siblings (`Cirreum.Runtime.Identity.Oidc`, `Cirreum.Runtime.Identity.EntraExternalId`) even though they wrap the same registrations — an intra-layer dependency ships one release behind under batch release + lowest-wins resolution, handing umbrella-only consumers a stale transitive graph. The small registration duplication is the deliberate price for a structurally correct dependency floor.
 
 ## Build Commands
 
@@ -18,10 +20,9 @@ dotnet pack --configuration Release
 ### What this package does
 
 1. **`AddIdentity(builder, configure?)`** (`Extensions/Hosting/HostApplicationBuilderExtensions.cs`)
-   - Calls `builder.AddOidcIdentity()` (no callback passed).
-   - Calls `builder.AddEntraExternalIdIdentity()` (no callback passed).
-   - Invokes the optional `Action<IIdentityBuilder>` callback exactly once against a single `IdentityBuilder(builder)` instance.
-   - Rationale for not forwarding the callback to each per-protocol method: the callback typically registers keyed `IUserProvisioner` services via `AddProvisioner<T>(key)`, which is idempotent per key. Forwarding would cause each `AddProvisioner<T>(k)` to run twice (once inside each per-protocol `AddXxx`) — harmless (last-one-wins on resolution) but wasteful.
+   - Marker-type dedup via `AddIdentityMarker` — provider registration runs once even across repeat calls.
+   - Calls `builder.RegisterIdentityProvider<TRegistrar, TSettings, TInstanceSettings>()` (from `Cirreum.Runtime.IdentityProvider`) once per shipped protocol: Oidc and EntraExternalId.
+   - Invokes the optional `Action<IIdentityBuilder>` callback exactly once against a single `IdentityBuilder(builder)` instance, so each `AddProvisioner<T>(key)` runs once per key (not per protocol × key).
 
 2. **`MapIdentity(endpoints)`** (`Extensions/Builder/EndpointRouteBuilderExtensions.cs`)
    - Resolves `IEnumerable<IdentityProviderMapping>` from DI.
@@ -29,8 +30,9 @@ dotnet pack --configuration Release
 
 ### What this package does NOT do
 
-- **Does not re-implement any Add/Map logic** — all behavior comes transitively from `Cirreum.Runtime.Identity.Oidc` and `Cirreum.Runtime.Identity.EntraExternalId`.
-- **Does not register any provider directly** — it only composes the per-protocol packages that do.
+- **Does not re-implement any registrar, handler, or settings type** — those live in the protocol packages (`Cirreum.Identity.Oidc`, `Cirreum.Identity.EntraExternalId`); the registration plumbing lives in `Cirreum.Runtime.IdentityProvider`.
+- **Does not register `IUserProvisioner`** — that's the app's job, via the `IIdentityBuilder.AddProvisioner<T>(key)` callback.
+- **Does not expose per-protocol verbs** — `AddOidcIdentity()` etc. live in the per-protocol packages only.
 
 ## Project Structure
 
@@ -48,15 +50,16 @@ src/Cirreum.Runtime.Identity/
 
 ## Dependencies
 
-- **Cirreum.Runtime.Identity.Oidc** (brings `Cirreum.Identity.Oidc` + `Cirreum.Runtime.IdentityProvider` transitively)
-- **Cirreum.Runtime.Identity.EntraExternalId** (brings `Cirreum.Identity.EntraExternalId` transitively)
+- **Cirreum.Runtime.IdentityProvider** — `RegisterIdentityProvider<>` helper, `IIdentityBuilder` + `IdentityBuilder`, `IdentityProviderMapping`
+- **Cirreum.Identity.Oidc** — Oidc registrar + settings types (the `RegisterIdentityProvider<>` generic arguments)
+- **Cirreum.Identity.EntraExternalId** — Entra External ID registrar + settings types
 - **Microsoft.AspNetCore.App**
 
 ## When to use this package vs. a per-protocol sibling
 
 - **Single protocol:** install `Cirreum.Runtime.Identity.Oidc` OR `Cirreum.Runtime.Identity.EntraExternalId` directly. The binary only carries that protocol's infra code.
-- **Multiple protocols:** install this umbrella. Both protocols' infra flows in transitively.
-- **Never install the umbrella alongside a per-protocol package** — the umbrella already depends on both, so doing so is redundant and may surface duplicate extension-method definitions at compile time.
+- **Multiple protocols:** install this umbrella. Both protocols are registered by `AddIdentity()`.
+- **Never install the umbrella alongside a per-protocol package** — both would register the same protocol independently (the umbrella and the per-protocol package use separate dedup markers), and both sets of Add/Map verbs would be in scope.
 
 ## Development Notes
 

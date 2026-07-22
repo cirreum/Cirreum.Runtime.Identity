@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<RootNamespace>Cirreum.Runtime</RootNamespace>
-		<Description>Runtime Extensions umbrella package for the Cirreum Identity provider family. Composes Cirreum.Runtime.Identity.Oidc and Cirreum.Runtime.Identity.EntraExternalId, and exposes app-facing AddIdentity() / MapIdentity() extensions that register all providers and map all provisioning routes.</Description>
+		<Description>Runtime Extensions umbrella package for the Cirreum Identity provider family. Exposes app-facing AddIdentity() / MapIdentity() extensions that register every shipped provider protocol (Oidc and EntraExternalId) and map all provisioning routes. Self-contained: composes the protocol packages and the identity runtime directly. Apps needing a single protocol install Cirreum.Runtime.Identity.Oidc or Cirreum.Runtime.Identity.EntraExternalId instead.</Description>
 		<PackageTags>cirreum;runtime;identity;oidc;entraexternalid;providers;umbrella</PackageTags>
 	</PropertyGroup>
 
@@ -11,8 +11,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Cirreum.Runtime.Identity.Oidc" Version="1.0.6" />
-		<PackageReference Include="Cirreum.Runtime.Identity.EntraExternalId" Version="1.0.6" />
+		<!--
+			Composed directly from the layers below (identity runtime + the two protocol
+			packages) — never from same-layer siblings. An intra-layer dependency ships one
+			release behind under batch release + lowest-wins resolution, handing
+			umbrella-only consumers a stale transitive graph.
+		-->
+		<PackageReference Include="Cirreum.Runtime.IdentityProvider" Version="1.1.0" />
+		<PackageReference Include="Cirreum.Identity.Oidc" Version="1.0.7" />
+		<PackageReference Include="Cirreum.Identity.EntraExternalId" Version="2.0.9" />
 	</ItemGroup>
 
 </Project>
