@@ -17,9 +17,9 @@
 			release behind under batch release + lowest-wins resolution, handing
 			umbrella-only consumers a stale transitive graph.
 		-->
-		<PackageReference Include="Cirreum.Runtime.IdentityProvider" Version="1.1.1" />
-		<PackageReference Include="Cirreum.Identity.Oidc" Version="1.1.0" />
-		<PackageReference Include="Cirreum.Identity.EntraExternalId" Version="2.1.1" />
+		<PackageReference Include="Cirreum.Runtime.IdentityProvider" Version="1.1.2" />
+		<PackageReference Include="Cirreum.Identity.Oidc" Version="1.1.1" />
+		<PackageReference Include="Cirreum.Identity.EntraExternalId" Version="2.1.2" />
 	</ItemGroup>
 
 </Project>
